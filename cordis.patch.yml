@@ -5,4 +5,4 @@
 # for their diagrams, leaving every built-in renderer untouched.
 - insert:
     - id: ui-mermaid-renderer
-      name: dsh-plugin-mermaid
+      name: "@lzpwap/dsh-plugin-mermaid"

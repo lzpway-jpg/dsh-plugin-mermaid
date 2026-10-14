@@ -5,7 +5,7 @@
  * The plugin is zero-config, so no Config schema is served.
  */
 
-export const name = 'dsh-plugin-mermaid'
+export const name = '@lzpwap/dsh-plugin-mermaid'
 
 /** Host plugin body — this package contributes browser presentation only. */
 export function apply(): void {}

@@ -1,5 +1,5 @@
 {
-  "name": "dsh-plugin-mermaid",
+  "name": "@lzpwap/dsh-plugin-mermaid",
   "description": "Render Mermaid diagrams (flowcharts, sequence diagrams, architecture, and more) inline in the DeepSeek Harness Web client transcript",
   "version": "0.2.0",
   "type": "module",

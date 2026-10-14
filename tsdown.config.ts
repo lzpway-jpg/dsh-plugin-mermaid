@@ -18,7 +18,7 @@ const MODULE_TABLE_EXTERNALS = new Set([
   '@deepseek-ai/dsh-client-runtime/client',
 ])
 
-const id = 'dsh-plugin-mermaid'
+const id = '@lzpwap/dsh-plugin-mermaid'
 
 export default defineConfig({
   name: `${id}/client`,

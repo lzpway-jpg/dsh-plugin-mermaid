@@ -1,4 +1,4 @@
-# dsh-plugin-mermaid
+# @lzpwap/dsh-plugin-mermaid
 
 Render [Mermaid](https://mermaid.js.org/) diagrams inline in the DeepSeek Harness Web client — flowcharts, sequence diagrams, class/state/ER diagrams, Gantt, mindmaps, architecture, and every other Mermaid diagram type show up as live SVG right in the transcript, in place of their code fences.
 
@@ -16,12 +16,12 @@ Zero configuration. No slots are occupied and no built-in renderer is replaced �
 ## Install
 
 ```sh
-dsh plugin --profile web add dsh-plugin-mermaid
+dsh plugin --profile web add @lzpwap/dsh-plugin-mermaid
 ```
 
 Restart `dsh web`, refresh the GUI, and ask the assistant for a diagram — any ```` ```mermaid ```` fence in the reply renders inline.
 
-Remove with `dsh plugin --profile web remove dsh-plugin-mermaid`.
+Remove with `dsh plugin --profile web remove @lzpwap/dsh-plugin-mermaid`.
 
 Requires dsh 0.1.7 or newer.
 

@@ -1,0 +1,70 @@
+{
+  "name": "dsh-plugin-mermaid",
+  "description": "Render Mermaid diagrams (flowcharts, sequence diagrams, architecture, and more) inline in the DeepSeek Harness Web client transcript",
+  "version": "0.2.0",
+  "type": "module",
+  "main": "lib/types/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/types/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime"
+      ]
+    }
+  },
+  "scripts": {
+    "bundle": "tsc -p tsconfig.json && tsdown",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "npm run bundle"
+  },
+  "license": "MIT",
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "mermaid",
+    "diagram",
+    "flowchart",
+    "sequence-diagram",
+    "architecture"
+  ],
+  "engines": {
+    "dsh": ">=0.1.7-rc.1 <0.1.8-0 || >=0.2.0-rc.1 <0.3.0-0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lzpway-jpg/dsh-plugin-mermaid.git"
+  },
+  "homepage": "https://github.com/lzpway-jpg/dsh-plugin-mermaid#readme",
+  "bugs": "https://github.com/lzpway-jpg/dsh-plugin-mermaid/issues",
+  "dependencies": {
+    "mermaid": "^11.12.0"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "^4.0.4",
+    "@deepseek-ai/dsh-client-runtime": "^0.1.1-rc.2",
+    "tsdown": "^0.22.2",
+    "typescript": "^5.9.0"
+  },
+  "files": [
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts",
+    "lib/client.js",
+    "lib/client.js.map",
+    "cordis.patch.yml"
+  ]
+}

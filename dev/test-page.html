@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>dsh-plugin-mermaid 离线验证</title>
+  <style>
+    body { font-family: -apple-system, "PingFang SC", sans-serif; max-width: 800px; margin: 0 auto; padding: 24px; }
+    .md-code-block { border: 1px solid #ddd; border-radius: 8px; margin: 16px 0; }
+    [data-code-block-banner] { display: flex; justify-content: space-between; padding: 6px 12px; border-bottom: 1px solid #eee; font-size: 12px; color: #888; }
+    [data-code-block-content] { padding: 12px; }
+    pre { margin: 0; font-family: ui-monospace, monospace; font-size: 13px; white-space: pre-wrap; }
+    #status { padding: 8px 12px; border-radius: 6px; background: #f5f5f5; font-size: 13px; white-space: pre-wrap; }
+    #status.pass { background: #e6f7e6; }
+    #status.fail { background: #fde8e8; }
+  </style>
+</head>
+<body>
+  <script>
+    // ?dark 模拟 GUI 深色主题标记，用于截图检查弹窗暗色样式
+    if (location.search.includes('dark')) document.body.setAttribute('data-ds-dark-theme', '')
+  </script>
+  <h1>dsh-plugin-mermaid 离线验证</h1>
+  <div id="status">running…</div>
+
+  <h2>用例 1：显式 mermaid 语言标头（banner 臂）</h2>
+  <div class="md-code-block" id="case1">
+    <div>
+      <div data-code-block-banner>
+        <div class="_infostring_hash">mermaid</div>
+        <div><button type="button">复制</button></div>
+      </div>
+    </div>
+    <div data-code-block-content>
+      <pre class="shiki"><code>flowchart TD
+    A[开始] --&gt; B{判断}
+    B --&gt;|是| C[执行]
+    B --&gt;|否| D[跳过]
+    C --&gt; E[结束]
+    D --&gt; E</code></pre>
+    </div>
+  </div>
+
+  <h2>用例 2：无语言标头，靠内容识别（toolbar 回退臂）</h2>
+  <div class="md-code-block" id="case2">
+    <div>
+      <div data-code-block-banner>
+        <div class="_heading_hash"><span class="_language_hash">代码</span></div>
+        <div><button type="button">复制</button></div>
+      </div>
+    </div>
+    <div data-code-block-content>
+      <pre class="shiki"><code>sequenceDiagram
+    participant U as 用户
+    participant S as 服务
+    U-&gt;&gt;S: 请求
+    S--&gt;&gt;U: 响应</code></pre>
+    </div>
+  </div>
+
+  <h2>用例 3：普通 python 代码块（不应渲染）</h2>
+  <div class="md-code-block" id="case3">
+    <div>
+      <div data-code-block-banner>
+        <div class="_heading_hash"><span class="_language_hash">python</span></div>
+        <div><button type="button">复制</button></div>
+      </div>
+    </div>
+    <div data-code-block-content>
+      <pre class="shiki"><code>graph = build_graph()
+for node in graph.nodes:
+    print(node)</code></pre>
+    </div>
+  </div>
+
+  <script>
+    // Stub the shell's shared module loader before the plugin bundle executes.
+    window.__ModuleLoader__ = {
+      load({ id, factory }) {
+        const require = (spec) => { throw new Error('unexpected require: ' + spec) }
+        window.__pluginExports = factory(require)
+        window.__pluginId = id
+      },
+    }
+  </script>
+  <script src="../lib/client.js"></script>
+  <script>
+    const disposers = []
+    const fakeCtx = {
+      effect(genFn, _label) {
+        for (const disposer of genFn()) disposers.push(disposer)
+      },
+    }
+    window.__pluginExports.apply(fakeCtx)
+
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+    const mark = (stage) => { document.title = 'stage:' + stage }
+    mark('loaded')
+    ;(async () => {
+      mark('async-start')
+      await sleep(2500) // debounce (200ms) + mermaid render
+      mark('slept')
+      const results = []
+      const check = (name, ok) => results.push(`${ok ? 'PASS' : 'FAIL'} ${name}`)
+      const case1 = document.getElementById('case1')
+      const container1 = case1.nextElementSibling
+      check('case1: 容器插入在代码块之后', container1?.hasAttribute('data-dsh-mermaid') === true)
+      check('case1: 渲染出 SVG', container1?.querySelector('.dsh-mermaid-diagram svg') !== null)
+      check('case1: 原代码块被隐藏', case1.style.display === 'none')
+      const case2 = document.getElementById('case2')
+      const container2 = case2.nextElementSibling
+      check('case2: 内容识别并渲染 SVG', container2?.querySelector('.dsh-mermaid-diagram svg') !== null)
+      const case3 = document.getElementById('case3')
+      const container3 = case3.nextElementSibling
+      check('case3: python 块未被处理', container3?.hasAttribute('data-dsh-mermaid') !== true && case3.style.display !== 'none')
+      // toggle: 切换到源码再切回
+      mark('before-toggle')
+      const toggle = container1?.querySelector('.dsh-mermaid-toggle:not(.dsh-mermaid-expand)')
+      toggle?.click()
+      mark('toggle-off')
+      check('toggle: 点击后显示源码', case1.style.display !== 'none')
+      toggle?.click()
+      check('toggle: 再次点击恢复图表', case1.style.display === 'none')
+      // lightbox: 详情弹窗
+      mark('lightbox-open')
+      const expandBtn = container1?.querySelector('.dsh-mermaid-expand')
+      expandBtn?.click()
+      await sleep(50)
+      const lightbox = document.querySelector('.dsh-mermaid-lightbox')
+      check('lightbox: 点击详情按钮打开弹窗', lightbox !== null)
+      check('lightbox: 弹窗内含 SVG 副本', lightbox?.querySelector('.dsh-mermaid-lightbox-canvas svg') !== null)
+      check('lightbox: 打开时锁定页面滚动', document.body.style.overflow === 'hidden')
+      const scaleBtn = lightbox?.querySelector('.dsh-mermaid-lightbox-scale')
+      const zoomInBtn = lightbox?.querySelectorAll('.dsh-mermaid-lightbox-button')[2]
+      const scale0 = scaleBtn?.textContent
+      for (let i = 0; i < 12; i += 1) zoomInBtn?.click()
+      check('lightbox: 放大后缩放值上升', scaleBtn?.textContent !== scale0)
+      const viewport = lightbox?.querySelector('.dsh-mermaid-lightbox-viewport')
+      check('lightbox: 超出窗口后允许拖动', viewport?.classList.contains('is-pannable') === true)
+      const canvas = lightbox?.querySelector('.dsh-mermaid-lightbox-canvas')
+      const transformBefore = canvas?.style.transform
+      viewport?.dispatchEvent(new PointerEvent('pointerdown', { clientX: 400, clientY: 300, button: 0, bubbles: true }))
+      window.dispatchEvent(new PointerEvent('pointermove', { clientX: 470, clientY: 350, bubbles: true }))
+      window.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }))
+      check('lightbox: 拖动改变平移量', canvas?.style.transform !== transformBefore)
+      const scaleBeforeWheel = scaleBtn?.textContent
+      viewport?.dispatchEvent(new WheelEvent('wheel', { deltaY: 300, clientX: 400, clientY: 300, bubbles: true, cancelable: true }))
+      check('lightbox: 滚轮缩放生效', scaleBtn?.textContent !== scaleBeforeWheel)
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+      check('lightbox: Esc 关闭弹窗', document.querySelector('.dsh-mermaid-lightbox') === null)
+      check('lightbox: 关闭后恢复页面滚动', document.body.style.overflow === '')
+      expandBtn?.click()
+      await sleep(50)
+      const viewport2 = document.querySelector('.dsh-mermaid-lightbox-viewport')
+      viewport2?.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      check('lightbox: 点击遮罩关闭', document.querySelector('.dsh-mermaid-lightbox') === null)
+      // 卸载时弹窗联动关闭
+      expandBtn?.click()
+      await sleep(50)
+      // 卸载恢复
+      mark('before-dispose')
+      for (const dispose of disposers) dispose()
+      mark('disposed')
+      check('unload: 弹窗随卸载关闭', document.querySelector('.dsh-mermaid-lightbox') === null)
+      check('unload: 容器全部移除', document.querySelector('[data-dsh-mermaid]') === null)
+      check('unload: 代码块全部恢复可见', case1.style.display === '' && case2.style.display === '')
+      const failed = results.some((line) => line.startsWith('FAIL'))
+      const status = document.getElementById('status')
+      status.textContent = results.join('\n')
+      status.className = failed ? 'fail' : 'pass'
+      document.title = failed ? 'VERIFY:FAIL' : 'VERIFY:PASS'
+    })().catch((error) => {
+      mark('caught')
+      const status = document.getElementById('status')
+      status.textContent = 'ERROR ' + String(error && error.stack || error)
+      status.className = 'fail'
+      document.title = 'VERIFY:ERROR'
+    })
+  </script>
+</body>
+</html>

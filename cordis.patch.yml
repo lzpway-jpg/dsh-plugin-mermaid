@@ -1,0 +1,8 @@
+# The layer this bundle contributes when a profile lists it.
+#
+# Insert this package's own plugin row. No official occupants are disabled:
+# the renderer only observes the transcript DOM and swaps Mermaid code fences
+# for their diagrams, leaving every built-in renderer untouched.
+- insert:
+    - id: ui-mermaid-renderer
+      name: dsh-plugin-mermaid
